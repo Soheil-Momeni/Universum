@@ -1,17 +1,19 @@
 Getting started
 ===============
 
-1. Step one: :doc:`install Universum <install>`. Use ``{python} -m universum --help`` to make sure the installation
-   was successful, and also to get the list of available :doc:`parameters <args>`.
+This guide will provide an example step-by-step tutorial on setting up CI for a GitHub project, using Jenkins server,
+GitHub application and Pylint analyzer. These are the steps to take:
 
-2. Step two: :ref:`initialize Universum <additional_commandst#init>` by creating a default :doc:`configuration
-   file <configuring>` and modifying it according to the project needs.
+1. Create a project on GitHub (add link to actual example project)
+2. Set up or get access to Jenkins server to perform CI checks
+3. Create a GitHub Application to report CI results to GitHub using :doc:`GitHub Handler <github_handler>`
+4. :doc:`Install Universum <install>` on Jenkins node that will perform the CI checks
+   and run the :doc:`GitHub Handler <github_handler>`
 
-3. Step three: use ``{python} -m universum run`` to :ref:`check the provided configuration
-   locally <additional_commandst#run>`.
+   * Use ``{python} -m universum --help`` to make sure the installation
+     was successful, and also to get the list of available :doc:`parameters <args>`
 
-4. Step four: submit a working configuration file to a VCS and pass required :doc:`parameters <args>` to `Universum`
-   to work with it.
-
-5. Configure CI, using `Universum`, on a CI server. See the following guides for :doc:`TeamCity <teamcity>` or
-   :ref:`GitHub <github_handler#jenkins>`.
+5. :ref:`Initialize Universum <additional_commandst#init>` in project sources by creating a default :doc:`configuration
+   file <configuring>` and modifying it according to the project needs
+6. Use ``{python} -m universum run`` to :ref:`check the provided configuration locally <additional_commandst#run>`
+7. Submit a working configuration file to a GitHub along with project sources
