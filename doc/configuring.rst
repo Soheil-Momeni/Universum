@@ -416,8 +416,8 @@ environment variable, use `if_env_set` key. When script comes to executing a ste
 if there's no environment variable with stated name set to either "true", "yes" or "y",the step is not executed.
 If any other value should be set, use ``if_env_set="VARIABLE_NAME == variable_value"`` comparison.
 Please pay special attention on the absence of any quotation marks around `variable_value`:
-if added, `VARIABLE_NAME` will be compared with `"variable_value"` string and thus fail. Also, please note,
-that all spaces before and after `variable_value` will be automatically removed, so
+if added, the value of `VARIABLE_NAME` environment variable will be compared with `"variable_value"` string
+and thus fail. Also, please note, that all spaces before and after `variable_value` will be automatically removed, so
 ``if_env_set="VARIABLE_NAME == variable_value "`` will be equal to ``os.environ["VARIABLE_NAME"] = "variable_value"``
 but not ``os.environ["VARIABLE_NAME"] = "variable_value "``.
 
