@@ -82,7 +82,7 @@ Bug fixes
 * **report:** if the report is not enabled for successful builds, it doesn't cause errors in the terminal anymore
 * **setup:** make installing modules for GitHub VCS type non-mandatory
 * **p4:** add disconnect before any connect to fix ``connection lost`` issues
-* **code_report:** replace code report pseudo-variable ``${CODE_REPORT_FILE}`` not only in ``command`` field
+* **code_report:** replace code report pseudo-variable ``{CODE_REPORT_FILE}`` not only in ``command`` field
 * **vcs:** raw exceptions no longer shown during finalize
 * **vcs:** exception if vcs is 'none' and there are code report steps
 * **p4:** ignore additional whitespaces in mappings
