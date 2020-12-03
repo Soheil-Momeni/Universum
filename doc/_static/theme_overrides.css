@@ -20,5 +20,17 @@
     .option {
         width: 1px !important;
     }
+
+    .collapsible .header{
+        display: block;
+        clear: both;
+    }
+    .collapsible .header:after {
+        content: " [+]";
+    }
+    .collapsible .header.open:after {
+        content: " [-]";
+    }
+
 }
 

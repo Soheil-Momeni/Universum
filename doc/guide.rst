@@ -6,14 +6,8 @@ GitHub application and Pylint analyzer. These are the steps to take:
 
 1. :ref:`Install Universum <guide#install>`
 2. :ref:`Initialize Unviersum <guide#init>`
-3. Set up or get access to Jenkins server to perform CI checks
-4. Create a GitHub Application to report CI results to GitHub using :doc:`GitHub Handler <github_handler>`
-5. :doc:`Install Universum <install>` on Jenkins node that will perform the CI checks
-   and run the :doc:`GitHub Handler <github_handler>`
-6. :ref:`Initialize Universum <additional_commandst#init>` in project sources by creating a default :doc:`configuration
-   file <configuring>` and modifying it according to the project needs
-7. Use ``{python} -m universum run`` to :ref:`check the provided configuration locally <additional_commandst#run>`
-8. Submit a working configuration file to a GitHub along with project sources
+3. :ref:`Configure project <guide#configure>`
+4. :ref:`Add static analyzer <guide#analyzer>`
 
 
 .. _guide#install:
@@ -54,14 +48,57 @@ The default :doc:`configuration file <configuring>`, created by this command, lo
 
     from universum.configuration_support import Configuration
 
-    configs = Configuration([dict(name='Show directory contents', command=['ls', '-la']),
-                          dict(name='Print a line', command=['bash', '-c', 'echo Hello world'])])
+    configs = Configuration([Step(name='Show directory contents', command=['ls', '-la']),
+                             Step(name='Print a line', command=['bash', '-c', 'echo Hello world'])])
 
     if __name__ == '__main__':
         print(configs.dump())
 
-This build scenario does pretty much nothing, so let's add some actual sources to project directory.
-For example, a simple script ``run.sh``::
+Running suggested command ``{python} -m universum run`` should result in launching Universum and
+getting an output like this::
+
+    ==> Universum 1.0.0 started execution
+    ==> Cleaning artifacts...
+    1. Processing project configs
+     |   ==> Adding file /home/user/universum-test-project/artifacts/CONFIGS_DUMP.txt to artifacts...
+     └ [Success]
+
+    2. Preprocessing artifact lists
+     └ [Success]
+
+    3. Executing build steps
+     |   3.1.  [ 1/2 ] Show directory contents
+     |      |   $ /usr/bin/ls -a
+     |      |   .  ..  artifacts  .universum.py
+     |      └ [Success]
+     |
+     |   3.2.  [ 2/2 ] Print a line
+     |      |   $ /usr/bin/bash -c 'echo Hello world'
+     |      |   Hello world
+     |      └ [Success]
+     |
+     └ [Success]
+
+    4. Reporting build result
+     |   ==> Here is the summarized build result:
+     |   ==> 3. Executing build steps
+     |   ==>   3.1.  [ 1/2 ] Show directory contents - Success
+     |   ==>   3.2.  [ 2/2 ] Print a line - Success
+     |   ==> Nowhere to report. Skipping...
+     └ [Success]
+
+    5. Collecting artifacts
+     └ [Success]
+
+    ==> Universum 1.0.0 finished execution
+
+
+.. _guide#configure:
+
+Configure project
+-----------------
+
+Let's add some actual sources to project directory. For example, a simple script ``run.sh``::
 
     #!/usr/bin/env bash
 
@@ -80,14 +117,14 @@ For example, a simple script ``run.sh``::
 
 Then, in configuration file we can refer to this script::
 
-    configs = Configuration([dict(name='Run script', command=['run.sh', 'pass'])])
+    configs = Configuration([Step(name='Run script', command=['run.sh', 'pass'])])
 
 After this change, running ``{python} -m universum run`` should result in the following output::
 
-    ==> Universum 0.19.3 started execution
+    ==> Universum 1.0.0 started execution
     ==> Cleaning artifacts...
     1. Processing project configs
-     |   ==> Adding file /home/user/work/artifacts/CONFIGS_DUMP.txt to artifacts...
+     |   ==> Adding file/home/user/universum-test-project/artifacts/CONFIGS_DUMP.txt to artifacts...
      └ [Success]
 
     2. Preprocessing artifact lists
@@ -111,6 +148,42 @@ After this change, running ``{python} -m universum run`` should result in the fo
     5. Collecting artifacts
      └ [Success]
 
-    ==> Universum 0.19.3 finished execution
+    ==> Universum 1.0.0 finished execution
 
-.. Try adding colored highlighting
+
+.. _guide#analyzer:
+
+Add static analyzer
+-------------------
+
+Say, instead of writing a script in `bash` we used `python`, and have the following script ``run.py``::
+
+    import sys
+    if len(sys.argv) < 2:
+        print("Unknown outcome")
+        sys.exit(2)
+    if sys.argv[1] == "pass":
+        print("Script succeeded")
+        sys.exit(0)
+    print("Script failed")
+    sys.exit(1)
+
+To use this script, we'd have to modify ``configs`` to this::
+
+    configs = Configuration([Step(name='Run script', command=['python', 'run.py', 'pass'])])
+
+which will get the same result as the previous one.
+
+But, let's presume we want to make sure our Python code style
+corresponds to PEP-8 from the very beginning. We might install `Pylint <https://www.pylint.org/>`__ via
+``{pip} install -U pylint``, and then add the code style check::
+
+    configs = Configuration([
+        Step(name='Run script', command=['python', 'run.py', 'pass']),
+        Step(name='Pylint check', code_report=True, command=[
+            'python', '-m', 'universum.analyzers.pylint', '--python-version', '3.7',
+            '--result-file', '${CODE_REPORT_FILE}', '--files', '*.py'
+        ])
+    ])
+
+Running Universum with this config will produce some output and some file.
