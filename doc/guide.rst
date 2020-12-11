@@ -5,10 +5,12 @@ This guide will provide an example step-by-step tutorial on setting up CI for a 
 GitHub application and Pylint analyzer. These are the steps to take:
 
 1. :ref:`Install Universum <guide#install>`
-2. :ref:`Load project to VCS <guide#vcs>`
+2. :ref:`Load project to VCS <guide#create>`
 3. :ref:`Initialize Unviersum <guide#init>`
 4. :ref:`Configure project <guide#configure>`
 5. :ref:`Add static analyzer <guide#analyzer>`
+6. :ref:`Upload changes to VCS <guide#upload>`
+7. :ref:`Run Universum in default mode <guide#launch>`
 
 
 .. _guide#install:
@@ -25,23 +27,42 @@ First, before setting up Continious Integration, let's implement and test Univer
 If nothing went wrong, you should get a list of available :doc:`command line parameters <args>`.
 
 
-.. _guide#vcs:
+.. _guide#create:
 
-Load project to VCS
--------------------
+Create project in VCS
+---------------------
 
-Using `a series of tutorials on creating new projects
- <https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/quickstart>`__, let's
-`create a repo <https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/create-a-repo>`__
-on GitHub. Presume we named it ``universum-test-project``. After creating a repo online, clone it locally::
+For demonstration purposes let's create a project on GitHub. To do so, we'll need to do the following:
 
-    git clone https://github.com/user/universum-test-project.git
+1. Register a user on GitHub, if not already (press the `Sign up` button and follow the instructions)
+2. Get to `Create a new repository` interactive dialog by doing any of these:
+
+   * press `New` button in `Repositories` block on main page (https://github.com/)
+   * press ``+`` button in upper right corner and select `New repository`
+   * press `New` button on `Repositories` tab on personal page (https://github.com/*YOUR-USERNAME*?tab=repositories)
+   * simply proceed to https://github.com/new
+
+3. Enter requested parameters:
+
+   * a name (we will use ``universum-test-project``)
+   * `Public/Private` (we will use `Public`)
+   * `Initialize this repository with` (we will use `Add a README file`)
+
+
+Read more about creating repositories in `a detailed GitHub guide
+<https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/create-a-repo>`__
+
+After creating a repo online, clone it locally::
+
+    git clone https://github.com/YOUR-USERNAME/universum-test-project.git
     cd universum-test-project
-    ls -la
+    ls -a
+
+The output of such command should be::
+
+    .  ..  .git  README.md
 
 From now on we will refer to this directory as a project root.
-Depending on how the project was initialized, project root directory might already contain a ``README.md`` file,
-a ``.gitignore`` file or/and a license file (but no actual project sources yet).
 
 
 .. _guide#init:
@@ -263,3 +284,43 @@ putting a ``pylintrc`` file in project root with following content::
     disable = missing-docstring
 
 Leading to `Universum` successful execution.
+
+
+.. _guide#upload:
+
+Upload changes to VCS
+---------------------
+
+Now that the project has some sources, we can upload them to VCS. But not all of the files, that are now present
+in project root directory, are required in VCS. Here are some directories, that might be present locally, but
+not to be committed:
+
+    * ``__pycache__``
+    * ``artifacts``
+    * ``code_report_results``
+
+To prevent them from being committed to GitHub, create a file named ``.gitignore`` with these directories listed in it::
+
+    __pycache__
+    artifacts
+    code_report_results
+
+After this, use these common `Git` commands::
+
+    git add --all
+    git commit -m "Add project sources"
+    git push
+
+Executing these commands may require your GitHub user name, password and/or e-mail address. If so,
+required info will be prompted to input via command line during command execution.
+
+Successful repository update will lead to all the files described above arriving on GitHub, along with the new
+commit ``Add project sources``.
+
+
+.. _guide#launch:
+
+Run Universum in default mode
+-----------------------------
+
+.. TBD
