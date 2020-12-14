@@ -9,8 +9,9 @@ GitHub application and Pylint analyzer. These are the steps to take:
 3. :ref:`Initialize Unviersum <guide#init>`
 4. :ref:`Configure project <guide#configure>`
 5. :ref:`Add static analyzer <guide#analyzer>`
-6. :ref:`Upload changes to VCS <guide#upload>`
-7. :ref:`Run Universum in default mode <guide#launch>`
+6. :ref:`Configuration filtering <guide#filter>`
+7. :ref:`Upload changes to VCS <guide#upload>`
+8. :ref:`Run Universum in default mode <guide#launch>`
 
 
 .. _guide#install:
@@ -129,6 +130,9 @@ getting an output like this::
 
     ==> Universum 1.0.0 finished execution
 
+Running this command will also produce a directory ``artifacts``, containing single file: ``CONFIGS_DUMP.txt``.
+The reason for this file existance will be explained in the next paragraph.
+
 
 .. _guide#configure:
 
@@ -187,6 +191,11 @@ After this change, running ``{python} -m universum run`` should result in the fo
 
     ==> Universum 1.0.0 finished execution
 
+More info on project configuration file can be found on :doc:`project configuration <configuring>` page.
+Final configuration may be a result of :class:`~universum.configuration_support.Step` objects multiplication
+and filtering, but the explicit list of steps to be executed can be found in ``CONFIGS_DUMP.txt`` file in
+``artifacts`` directory.
+
 
 .. _guide#analyzer:
 
@@ -217,9 +226,9 @@ corresponds to PEP-8 from the very beginning. We might install `Pylint <https://
 ``{pip} install -U pylint``, and then add the code style check::
 
     configs = Configuration([
-        Step(name='Run script', command=['python', 'run.py', 'pass']),
+        Step(name='Run script', command=['{python}', 'run.py', 'pass']),
         Step(name='Pylint check', code_report=True, command=[
-            'python', '-m', 'universum.analyzers.pylint', '--python-version', '3.7',
+            '{python}', '-m', 'universum.analyzers.pylint', '--python-version', '3.7',
             '--result-file', '${CODE_REPORT_FILE}', '--files', '*.py'
         ])
     ])
@@ -237,11 +246,11 @@ Running Universum with this config will produce the following output::
 
     3. Executing build steps
      |   3.1.  [ 1/2 ] Run script
-     |      |   $ /usr/bin/python run.py pass
+     |      |   $ /usr/bin/{python} run.py pass
      |      └ [Success]
      |
      |   3.2.  [ 2/2 ] Pylint check
-     |      |   $ /usr/bin/python -m universum.analyzers.pylint --python-version 3.7 --result-file /home/user/universum-test-project/code_report_results/Pylint_check.json --files '*.py'
+     |      |   $ /usr/bin/{python} -m universum.analyzers.pylint --python-version 3.7 --result-file /home/user/universum-test-project/code_report_results/Pylint_check.json --files '*.py'
      |      |   Error: Module sh got exit code 1
      |      └ [Failed]
      |
@@ -286,6 +295,47 @@ putting a ``pylintrc`` file in project root with following content::
 Leading to `Universum` successful execution.
 
 
+.. _guide#filter:
+
+Configuration filtering
+-----------------------
+
+Let's presume, we want to only run one of the two steps currently listed in ``confis``. For example, to double check
+the code style we only want to run a ``Pylint check`` step. This can be easily achieved by simply using
+the ``--filter`` `command-line parameter <args.html#Configuration\ execution>`__. When running
+a ``{python} -m universum run -f Pylint`` command, we will get the following output::
+
+    ==> Universum 1.0.0 started execution
+    ==> Cleaning artifacts...
+    1. Processing project configs
+     |   ==> Adding file /home/user/universum-test-project/artifacts/CONFIGS_DUMP.txt to artifacts...
+     └ [Success]
+
+    2. Preprocessing artifact lists
+     └ [Success]
+
+    3. Executing build steps
+     |   3.1.  [ 1/1 ] Pylint check
+     |      |   $ /usr/bin/{python} -m universum.analyzers.pylint --python-version 3.7 --result-file '${CODE_REPORT_FILE}' --files '*.py'
+     |      └ [Success]
+     |
+     └ [Success]
+
+    4. Reporting build result
+     |   ==> Here is the summarized build result:
+     |   ==> 3. Executing build steps
+     |   ==>   3.1.  [ 1/1 ] Pylint check - Success
+     |   ==> Nowhere to report. Skipping...
+     └ [Success]
+
+    5. Collecting artifacts
+     └ [Success]
+
+    ==> Universum 1.0.0 finished execution
+
+This is quite useful for local checks.
+
+
 .. _guide#upload:
 
 Upload changes to VCS
@@ -322,5 +372,110 @@ commit ``Add project sources``.
 
 Run Universum in default mode
 -----------------------------
+
+Now that project sources can be accessed online, we may launch `Universum` in default CI mode, including
+downloading sources from server.
+
+.. note::
+
+    As we are now planing to work with Git repository, `Universum` will :doc:`require <install>`
+    Git CLI installed in the system, and some additional Python packages specific for Git.
+
+We can install all these by::
+
+    sudo apt install git
+    {pip} install -U universum[git]
+
+Now let's leave the project root directory, as we no longer need local sources, create a new one,
+``universum-ci-checks``, and launch `Universum` there::
+
+    cd ..
+    mkdir universum-ci-checks
+    python -m universum --no-diff --vcs-type git --git-repo https://github.com/YOUR-USERNAME/universum-test-project.git
+
+We will now get a log, very similar to previous one, but with some additional sections:
+
+.. code-block::
+   :linenos:
+   :emphasize-lines: 2-17, 26-28, 45-48, 62-66
+
+    ==> Universum 1.0.0 started execution
+    1. Preparing repository
+     |   ==> Adding file /home/user/universum-ci-checks/artifacts/REPOSITORY_STATE.txt to artifacts...
+     |   1.1. Cloning repository
+     |      |   ==> Cloning 'https://github.com/YOUR-USERNAME/universum-test-project.git'...
+     |      |   ==> Cloning into '/home/user/universum-ci-checks/temp'...
+     |      |   ==> POST git-upload-pack (165 bytes)
+     |      |   ==> remote: Enumerating objects: 9, done.
+     |      |   ==> remote: Total 9 (delta 0), reused 6 (delta 0), pack-reused 0
+     |      |   ==> Please note that default remote name is 'origin'
+     |      └ [Success]
+     |
+     |   1.2. Checking out
+     |      |   ==> Checking out 'HEAD'...
+     |      └ [Success]
+     |
+     └ [Success]
+
+    2. Processing project configs
+     |   ==> Adding file /home/user/universum-ci-checks/artifacts/CONFIGS_DUMP.txt to artifacts...
+     └ [Success]
+
+    3. Preprocessing artifact lists
+     └ [Success]
+
+    4. Reporting build start
+     |   ==> Nowhere to report. Skipping...
+     └ [Success]
+
+    5. Executing build steps
+     |   5.1.  [ 1/2 ] Run script
+     |      |   ==> Adding file /home/user/universum-ci-checks/artifacts/Run_script_log.txt to artifacts...
+     |      |   ==> Execution log is redirected to file
+     |      |   $ /usr/bin/{python} run.py pass
+     |      └ [Success]
+     |
+     |   5.2.  [ 2/2 ] Pylint check
+     |      |   ==> Adding file /home/user/universum-ci-checks/artifacts/Pylint_check_log.txt to artifacts...
+     |      |   ==> Execution log is redirected to file
+     |      |   $ /usr/bin/{python} -m universum.analyzers.pylint --python-version 3.7 --result-file /home/user/universum-ci-checks/temp/code_report_results/Pylint_check.json --files '*.py'
+     |      └ [Success]
+     |
+     └ [Success]
+
+    6. Processing code report results
+     |   ==> Adding file /home/user/universum-ci-checks/artifacts/Static_analysis_report.json to artifacts...
+     |   ==> Issues not found.
+     └ [Success]
+
+    7. Collecting artifacts
+     └ [Success]
+
+    8. Reporting build result
+     |   ==> Here is the summarized build result:
+     |   ==> 5. Executing build steps
+     |   ==>   5.1.  [ 1/2 ] Run script - Success
+     |   ==>   5.2.  [ 2/2 ] Pylint check - Success
+     |   ==> 7. Collecting artifacts - Success
+     |   ==> Nowhere to report. Skipping...
+     └ [Success]
+
+    9. Finalizing
+     |   9.1. Cleaning copied sources
+     |      └ [Success]
+     |
+     └ [Success]
+
+    ==> Universum 1.0.0 finished execution
+
+We will look at `reporting` closer a little later, and for now pay attention to ``Preparing repository``/``Finalizing``
+blocks. As a CI system, `Univesrum` downloads sources from server, runs checks on them and then clears up.
+Pay attention to the directory ``artifacts``. Until now it contained only the ``CONFIGS_DUMP.txt`` file with
+full step list; but now it contains a lot of new files:
+
+    * REPOSITORY_STATE.txt
+    * Run_script_log.txt
+    * Pylint_check_log.txt
+    * Static_analysis_report.json
 
 .. TBD
