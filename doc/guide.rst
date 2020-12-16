@@ -478,4 +478,24 @@ full step list; but now it contains a lot of new files:
     * Pylint_check_log.txt
     * Static_analysis_report.json
 
+First one describes what sources were used for this exact build: repo, fetch target (e.g. `HEAD` or commit hash),
+list of downloaded files. In case of other VCS types (such as Perforce or local folder) the contents of this file
+will vary; the purpose of this file is repeatability of the builds.
+
+Next two files are step execution logs. When project configuration includes many different steps, each containing
+a long execution log, reading the whole `Universum` log in console may be not that user-friendly. That's why when
+executing in console, by default the logs are written to files. This befaviour may be changed via ``--out``
+`command-line parameter <args.html#Output>`__.
+
+And, finally, the last file, ``Static_analysis_report.json``, contains all issues found by ``code_report=True``
+steps. As we already fixed all Pylint issues, it should now contain an empty list ``[]``.
+
+
+.. _guide#jenkins:
+
+Set up Jenkins server
+---------------------
+
+Now that CI builds are working locally, let's set up a real automated CI.
+
 .. TBD
